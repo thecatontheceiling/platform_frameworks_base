@@ -4299,7 +4299,12 @@ public final class AutofillManager {
      * Gets the master seed used to generate noise for privacy-preserving autofill responses.
      * This API is only expected to be used for CTS tests verifying the noise injection behaviors.
      *
-     * @return The master seed, or {@code null} if the service is not available.
+     * <p>The caller must hold
+     * {@link android.Manifest.permission#MANAGE_AUTO_FILL}. Without it, the request is refused
+     * and this method returns {@code null} after a timeout.
+     *
+     * @return The master seed, or {@code null} if the service is not available or
+     *     the caller does not hold the permission.
      * @hide
      */
     @FlaggedApi(FLAG_STRING_REBUILD_API)

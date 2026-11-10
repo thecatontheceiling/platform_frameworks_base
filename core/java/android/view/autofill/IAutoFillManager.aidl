@@ -74,9 +74,14 @@ oneway interface IAutoFillManager {
     void notifyImeAnimationStart(int sessionId, long startTimeMs, int userId);
     void notifyImeAnimationEnd(int sessionId, long endTimeMs, int userId);
     // For SystemUI to notify AutofillManager of a suggestion result from personal context.
+    // STATUS_BAR_SERVICE is signature|recents: held by more apps than SystemUI.
+    @EnforcePermission("STATUS_BAR_SERVICE")
     void notifySystemInlineSuggestions(int sessionId, in List<Dataset> inlineSuggestionsData, int userId);
     // For SystemUI to notify AutofillManager that a remote fill has occurred.
+    // STATUS_BAR_SERVICE is signature|recents: held by more apps than SystemUI.
+    @EnforcePermission("STATUS_BAR_SERVICE")
     void autofillRemoteApp(IBinder activityToken, int taskId, in AutofillId id,
         in AutofillValue value, int userId);
+    @EnforcePermission("MANAGE_AUTO_FILL")
     void getNoiseInjectionMasterSeed(in IResultReceiver result);
 }

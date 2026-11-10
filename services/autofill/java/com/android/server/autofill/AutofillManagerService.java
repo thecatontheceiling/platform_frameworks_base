@@ -28,6 +28,7 @@ import static com.android.server.autofill.Helper.sVerbose;
 
 import static java.util.Objects.requireNonNull;
 
+import android.annotation.EnforcePermission;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.UserIdInt;
@@ -50,6 +51,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.os.Parcelable;
+import android.os.PermissionEnforcer;
 import android.os.RemoteCallback;
 import android.os.RemoteException;
 import android.os.ResultReceiver;
@@ -1781,6 +1783,10 @@ public final class AutofillManagerService
     }
 
     final class AutoFillManagerServiceStub extends IAutoFillManager.Stub {
+        AutoFillManagerServiceStub() {
+            super(PermissionEnforcer.fromContext(getContext()));
+        }
+
         @Override
         public void addClient(IAutoFillManagerClient client, ComponentName componentName,
                 int userId, IResultReceiver receiver, boolean credmanRequested) {
@@ -2328,13 +2334,21 @@ public final class AutofillManagerService
             }
         }
 
+        // Writes a value into a view of another task's activity.
         @Override
+        @EnforcePermission(android.Manifest.permission.STATUS_BAR_SERVICE)
         public void autofillRemoteApp(
                 @NonNull IBinder shareableActivityToken,
                 int taskId,
                 @NonNull AutofillId autofillId,
                 @NonNull AutofillValue autofillValue,
                 int userId) {
+            autofillRemoteApp_enforcePermission();
+            // @NonNull is not enforced on binder callers, and a null token
+            // makes the activity lookup fall back to the task's top activity.
+            requireNonNull(shareableActivityToken, "shareableActivityToken");
+            requireNonNull(autofillId, "autofillId");
+            requireNonNull(autofillValue, "autofillValue");
             synchronized (mLock) {
                 final AutofillManagerServiceImpl service =
                         peekServiceForUserWithLocalBinderIdentityLocked(userId);
@@ -2348,13 +2362,16 @@ public final class AutofillManagerService
         }
 
         @Override
+        @EnforcePermission(MANAGE_AUTO_FILL)
         public void getNoiseInjectionMasterSeed(IResultReceiver result) {
+            getNoiseInjectionMasterSeed_enforcePermission();
             send(result, getNoiseInjectionMasterSeedValue());
         }
 
-        @Override
+        @EnforcePermission(android.Manifest.permission.STATUS_BAR_SERVICE)
         public void notifySystemInlineSuggestions(
                 int sessionId, List<Dataset> inlineSuggestionsData, int userId) {
+            notifySystemInlineSuggestions_enforcePermission();
             synchronized (mLock) {
                 final AutofillManagerServiceImpl service =
                         peekServiceForUserWithLocalBinderIdentityLocked(userId);
